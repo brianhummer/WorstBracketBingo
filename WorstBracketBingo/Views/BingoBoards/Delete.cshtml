@@ -1,0 +1,35 @@
+@model WorstBracketBingo.Models.BingoBoard
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>BingoBoard</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <input type="hidden" asp-for="BingoBoardID" />
+        <dt>
+            @Html.DisplayNameFor(model => model.BracketID)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.BracketID)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Title)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Title)
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            <a asp-action="Index">Back to List</a>
+        </div>
+    </form>
+</div>

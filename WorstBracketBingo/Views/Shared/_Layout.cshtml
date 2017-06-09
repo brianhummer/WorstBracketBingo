@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>@ViewData["Title"] - WorstBracketBingo</title>
+    <title>@ViewData["Title"] - Worst Bracket Bingo</title>
 
     <environment names="Development">
         <link rel="stylesheet" href="~/lib/bootstrap/dist/css/bootstrap.css" />
@@ -28,13 +28,14 @@
                     <span class="icon-bar"></span>
                     <span class="icon-bar"></span>
                 </button>
-                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">WorstBracketBingo</a>
+                <a asp-area="" asp-controller="Home" asp-action="Index" class="navbar-brand">Worst Bracket Bingo</a>
             </div>
             <div class="navbar-collapse collapse">
                 <ul class="nav navbar-nav">
                     <li><a asp-area="" asp-controller="Home" asp-action="Index">Home</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="About">About</a></li>
-                    <li><a asp-area="" asp-controller="Home" asp-action="Contact">Contact</a></li>
+                    <li><a asp-area="" asp-controller="Brackets" asp-action="Index">Brackets</a></li>
+                    <li><a asp-area="" asp-controller="Entrants" asp-action="Index">Entrants</a></li>
+                    <li><a asp-area="" asp-controller="BingoBoards" asp-action="Index">Bingo Boards</a></li>
                 </ul>
             </div>
         </div>
@@ -43,7 +44,7 @@
         @RenderBody()
         <hr />
         <footer>
-            <p>&copy; 2017 - WorstBracketBingo</p>
+            <p>&copy; 2017 - Worst Bracket Bingo</p>
         </footer>
     </div>
 

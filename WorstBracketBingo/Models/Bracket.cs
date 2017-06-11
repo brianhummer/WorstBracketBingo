@@ -10,7 +10,9 @@ namespace WorstBracketBingo.Models
         public int BracketID { get; set; }
         public string Title { get; set; }
         public int Size { get; set; }
+        public int Round { get; set; }
 
-        public ICollection<BingoBoard> BingoBoards;
+        public ICollection<Contender> Contenders { get; set; }
+        public ICollection<BingoBoard> BingoBoards { get; set; }
     }
 }

@@ -49,7 +49,6 @@ namespace WorstBracketBingo.Controllers
         {
             var board = new BingoBoard();
             board.BoardPieces = new List<BoardPiece>();
-            PopulateAssignedEntrantData(board);
             return View();
         }
 
@@ -58,21 +57,21 @@ namespace WorstBracketBingo.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("BingoBoardID,BracketID,Title")] BingoBoard bingoBoard, string[] selectedEntrants)
+        public async Task<IActionResult> Create([Bind("BingoBoardID,BracketID,Title")] BingoBoard bingoBoard, string[] selectedContenders)
         {
-            if (selectedEntrants != null)
+            if (selectedContenders != null)
             {
                 List<int> positions = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
                 var rand = new Random();
 
                 bingoBoard.BoardPieces = new List<BoardPiece>();
-                foreach (var entrant in selectedEntrants)
+                foreach (var contender in selectedContenders)
                 {
                     var index = rand.Next(0, positions.Count);
                     positions.Remove(positions[index]);
                     
-                    var entrantToAdd = new BoardPiece { BingoBoardID = bingoBoard.BingoBoardID, EntrantID = int.Parse(entrant), Eliminated = false, RoundsAlive = 0, BoardPosition = index };
-                    bingoBoard.BoardPieces.Add(entrantToAdd);
+                    var contenderToAdd = new BoardPiece { BingoBoardID = bingoBoard.BingoBoardID, ContenderID = int.Parse(contender), BoardPosition = index };
+                    bingoBoard.BoardPieces.Add(contenderToAdd);
                 }
             }
 
@@ -82,7 +81,6 @@ namespace WorstBracketBingo.Controllers
                 await _context.SaveChangesAsync();
                 return RedirectToAction("Index");
             }
-            PopulateAssignedEntrantData(bingoBoard);
             return View(bingoBoard);
         }
 
@@ -138,23 +136,6 @@ namespace WorstBracketBingo.Controllers
                 return RedirectToAction("Index");
             }
             return View(bingoBoard);
-        }
-
-        private void PopulateAssignedEntrantData(BingoBoard board)
-        {
-            var allEntrants = _context.Entrants;
-            var boardEntrants = new HashSet<int>(board.BoardPieces.Select(e => e.EntrantID));
-            var viewModel = new List<AssignedEntrantData>();
-            foreach (var entrant in allEntrants)
-            {
-                viewModel.Add(new AssignedEntrantData
-                {
-                    EntrantID = entrant.EntrantID,
-                    Name = entrant.Name,
-                    Assigned = boardEntrants.Contains(entrant.EntrantID)
-                });
-            }
-            ViewData["Entrants"] = viewModel;
         }
 
         // GET: BingoBoards/Delete/5

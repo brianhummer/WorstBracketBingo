@@ -9,6 +9,7 @@ namespace WorstBracketBingo.Models.BracketBingoViewModels
     {
         public int EntrantID { get; set; }
         public string Name { get; set; }
+        public string Thumbnail { get; set; }
         public bool Assigned { get; set; }
     }
 }

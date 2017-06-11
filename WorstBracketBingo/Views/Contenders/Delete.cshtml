@@ -1,0 +1,47 @@
+@model WorstBracketBingo.Models.Contender
+
+@{
+    ViewData["Title"] = "Delete";
+}
+
+<h2>Delete</h2>
+
+<h3>Are you sure you want to delete this?</h3>
+<div>
+    <h4>Contender</h4>
+    <hr />
+    <dl class="dl-horizontal">
+        <input type="hidden" asp-for="ContenderID" />
+        <dt>
+            @Html.DisplayNameFor(model => model.BracketID)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.BracketID)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Eliminated)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Eliminated)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.RoundsAlive)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.RoundsAlive)
+        </dd>
+        <dt>
+            @Html.DisplayNameFor(model => model.Entrant)
+        </dt>
+        <dd>
+            @Html.DisplayFor(model => model.Entrant.Name)
+        </dd>
+    </dl>
+    
+    <form asp-action="Delete">
+        <div class="form-actions no-color">
+            <input type="submit" value="Delete" class="btn btn-default" /> |
+            <a asp-action="Index">Back to List</a>
+        </div>
+    </form>
+</div>

@@ -18,5 +18,6 @@ namespace WorstBracketBingo.Data
         public DbSet<Bracket> Brackets { get; set; }
         public DbSet<BingoBoard> BingoBoards { get; set; }
         public DbSet<BoardPiece> BoardPieces { get; set; }
+        public DbSet<Contender> Contenders { get; set; }
     }
 }

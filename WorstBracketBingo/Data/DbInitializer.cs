@@ -19,10 +19,10 @@ namespace WorstBracketBingo.Data
 
             var entrants = new Entrant[]
             {
-                new Entrant{ Name="Holo", Tag="Spice & Wolf"},
-                new Entrant{ Name="Rin Tohsaka", Tag="FSN UBW"},
-                new Entrant{ Name="Kazusa Touma", Tag="White Album 2"},
-                new Entrant{ Name="Asuka Langley", Tag="Evangelion"}
+                new Entrant{ Name="Holo", Tag="Spice & Wolf", Thumbnail="defaultThumb.jpg"},
+                new Entrant{ Name="Rin Tohsaka", Tag="FSN UBW", Thumbnail="defaultThumb.jpg"},
+                new Entrant{ Name="Kazusa Touma", Tag="White Album 2", Thumbnail="defaultThumb.jpg"},
+                new Entrant{ Name="Asuka Langley", Tag="Evangelion", Thumbnail="defaultThumb.jpg"}
             };
 
             foreach (Entrant e in entrants)
@@ -33,12 +33,24 @@ namespace WorstBracketBingo.Data
 
             var brackets = new Bracket[]
             {
-                new Bracket{ Title="Best Girl 4: A Certain Salty Railgun!", Size=512}
+                new Bracket{ Title="Best Girl 4: A Certain Salty Railgun!", Size=512, Round=0}
             };
 
             foreach (Bracket b in brackets)
             {
                 context.Brackets.Add(b);
+            }
+            context.SaveChanges();
+
+            var contenders = new Contender[]
+            {
+                new Contender{ BracketID=1, EntrantID=1, Eliminated=false, RoundsAlive=0},
+                new Contender{ BracketID=1, EntrantID=2, Eliminated=false, RoundsAlive=0}
+            };
+
+            foreach (Contender c in contenders)
+            {
+                context.Contenders.Add(c);
             }
             context.SaveChanges();
 

@@ -122,6 +122,49 @@ namespace WorstBracketBingo.Controllers
             return View(contender);
         }
 
+        [HttpPost]
+        public async Task<IActionResult> UpdateEliminationStatus(int id)
+        {
+            var contender = await _context.Contenders
+                /*.Include(c => c.RoundContenders)
+                    .ThenInclude(r => r.Round)
+                .Include(c => c.Bracket)*/
+                .SingleOrDefaultAsync(m => m.ContenderID == id);
+
+            if (ModelState.IsValid)
+            {
+                try
+                {
+                    contender.Eliminated = contender.Eliminated == true ? false : true;
+                    /*var currentRound = contender.Bracket.Rounds.Count;
+
+                    foreach (var rc in contender.RoundContenders)
+                    {
+                        if (rc.Round.RoundNumber == currentRound)
+                            rc.Eliminated = contender.Eliminated;
+                    }
+                    */
+                    _context.Update(contender);
+
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateConcurrencyException)
+                {
+                    if (!ContenderExists(contender.ContenderID))
+                    {
+                        return NotFound();
+                    }
+                    else
+                    {
+                        throw;
+                    }
+                }
+                return Json(contender);
+            }
+
+            return Json(contender);
+        }
+
         // GET: Contenders/Delete/5
         public async Task<IActionResult> Delete(int? id)
         {

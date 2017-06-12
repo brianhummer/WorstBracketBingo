@@ -35,7 +35,17 @@ namespace WorstBracketBingo.Controllers
             }
 
             var bracket = await _context.Brackets
+                .Include(b => b.BingoBoards)
+                .Include(b => b.Contenders)
+                    .ThenInclude(c => c.Entrant)
+                .Include(b => b.Rounds)
+                    .ThenInclude(r => r.RoundContenders)
+                    .ThenInclude(r => r.Contender)
+                    .ThenInclude(r => r.Entrant)
                 .SingleOrDefaultAsync(m => m.BracketID == id);
+
+            bracket.Rounds.OrderBy(o => o.RoundNumber);
+
             if (bracket == null)
             {
                 return NotFound();
@@ -49,7 +59,9 @@ namespace WorstBracketBingo.Controllers
         {
             var bracket = new Bracket();
             bracket.Contenders = new List<Contender>();
+            bracket.Rounds = new List<Round>();
             PopulateAssignedContenderData(bracket);
+            //PopulateAssignedRoundData(bracket);
             return View();
         }
 
@@ -58,7 +70,7 @@ namespace WorstBracketBingo.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("BracketID,Title,Size")] Bracket bracket, string[] selectedEntrants)
+        public async Task<IActionResult> Create([Bind("BracketID,Title")] Bracket bracket, string[] selectedEntrants)
         {
             if (selectedEntrants != null)
             {
@@ -69,6 +81,9 @@ namespace WorstBracketBingo.Controllers
                     bracket.Contenders.Add(entrantToAdd);
                 }
             }
+
+            bracket.Rounds = new List<Round>();
+
             if (ModelState.IsValid)
             {
                 _context.Add(bracket);
@@ -102,38 +117,6 @@ namespace WorstBracketBingo.Controllers
         // POST: Brackets/Edit/5
         // To protect from overposting attacks, please enable the specific properties you want to bind to, for 
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
-        /*
-        [HttpPost]
-        [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("BracketID,Title,Size")] Bracket bracket)
-        {
-            if (id != bracket.BracketID)
-            {
-                return NotFound();
-            }
-
-            if (ModelState.IsValid)
-            {
-                try
-                {
-                    _context.Update(bracket);
-                    await _context.SaveChangesAsync();
-                }
-                catch (DbUpdateConcurrencyException)
-                {
-                    if (!BracketExists(bracket.BracketID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
-                }
-                return RedirectToAction("Index");
-            }
-            return View(bracket);
-        }*/
         [HttpPost]
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Edit(int? id, string[] selectedEntrants)
@@ -148,7 +131,7 @@ namespace WorstBracketBingo.Controllers
                     .ThenInclude(i => i.Entrant)
                 .SingleOrDefaultAsync(m => m.BracketID == id);
 
-            if (await TryUpdateModelAsync<Bracket>(bracketToUpdate, "", i => i.Title, i => i.Size, i => i.Round))
+            if (await TryUpdateModelAsync<Bracket>(bracketToUpdate, "", i => i.Title))
             {
                 UpdateBracketEntrants(selectedEntrants, bracketToUpdate);
                 try
@@ -168,6 +151,99 @@ namespace WorstBracketBingo.Controllers
             PopulateAssignedContenderData(bracketToUpdate);
             return View(bracketToUpdate);
         }
+
+        // GET: Brackets/NextRound/5
+        public async Task<IActionResult> NextRound(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var bracketToUpdate = await _context.Brackets
+                .Include(i => i.Contenders)
+                .Include(i => i.Rounds)
+                .SingleOrDefaultAsync(m => m.BracketID == id);
+
+            if (await TryUpdateModelAsync<Bracket>(bracketToUpdate, "", i => i.Title))
+            {
+                AddNewRound(bracketToUpdate);
+                try
+                {
+                    await _context.SaveChangesAsync();
+                }
+                catch (DbUpdateException /* ex */)
+                {
+                    //Log the error (uncomment ex variable name and write a log.)
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                        "Try again, and if the problem persists, " +
+                        "see your system administrator.");
+                }
+                return RedirectToAction("Details",new { id = id });
+            }
+            AddNewRound(bracketToUpdate);
+            return View(bracketToUpdate);
+        }
+
+        // GET: Brackets/ViewBoards/5
+        public async Task<IActionResult> ViewBoards(int? id)
+        {
+            if (id == null)
+            {
+                return NotFound();
+            }
+
+            var bracket = await _context.Brackets
+                .Include(b => b.BingoBoards)
+                .ThenInclude(b => b.BoardPieces)
+                .ThenInclude(b => b.Contender)
+                .ThenInclude(b => b.Entrant)
+                .AsNoTracking()
+                .SingleOrDefaultAsync(m => m.BracketID == id);
+
+            if (bracket == null)
+            {
+                return NotFound();
+            }
+
+            return View(bracket);
+        }
+
+        private void AddNewRound(Bracket bracketToUpdate)
+        {
+            var round = new Round();
+            round.RoundNumber = bracketToUpdate.Rounds.Count + 1;
+            round.RoundContenders = new List<RoundContender>();
+
+            foreach (var contender in bracketToUpdate.Contenders)
+            {
+                if (!contender.Eliminated)
+                {
+                    round.RoundContenders.Add(new RoundContender { RoundID = round.RoundID, ContenderID = contender.ContenderID });
+                    contender.RoundsAlive++;
+                }
+            }
+
+            bracketToUpdate.Rounds.Add(round);
+        }
+
+        private void PopulateAssignedRoundData(Round round)
+        {
+            var allContenders = _context.Contenders;
+            var roundContenders = new HashSet<int>(round.RoundContenders.Select(c => c.ContenderID));
+            var viewModel = new List<AssignedRoundData>();
+            foreach (var contender in allContenders)
+            {
+                viewModel.Add(new AssignedRoundData
+                {
+                    //ContenderID = contender.ContenderID,
+                   // Title = course.Title,
+                   // Assigned = instructorCourses.Contains(course.CourseID)
+                });
+            }
+            ViewData["Round"] = viewModel;
+        }
+
 
         private void PopulateAssignedContenderData(Bracket bracket)
         {

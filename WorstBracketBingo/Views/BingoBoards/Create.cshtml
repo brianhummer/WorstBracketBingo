@@ -14,7 +14,7 @@
         <div class="form-group">
             <label asp-for="BracketID" class="col-md-2 control-label"></label>
             <div class="col-md-10">
-                <input asp-for="BracketID" class="form-control" />
+                <input asp-for="BracketID" class="form-control" readonly value="@Model.BracketID"/>
                 <span asp-validation-for="BracketID" class="text-danger"></span>
             </div>
         </div>
@@ -23,6 +23,34 @@
             <div class="col-md-10">
                 <input asp-for="Title" class="form-control" />
                 <span asp-validation-for="Title" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <div class="col-md-offset-2 col-md-10">
+                <table>
+                    <tr>
+                        @{
+                            int cnt = 0;
+                            List<WorstBracketBingo.Models.BracketBingoViewModels.AssignedContenderData> contenders = ViewBag.Contenders;
+
+                            foreach (var contender in contenders)
+                            {
+                                if (cnt++ % 3 == 0)
+                                {
+                                    @:</tr><tr>
+                                }
+                                @:<td>
+                                    <input type="checkbox"
+                                        name="selectedContenders"
+                                        value="@contender.ContenderID"
+                                        @(Html.Raw(contender.Assigned ? "checked=\"checked\"" : "")) />
+                                        <img src="@Url.Content("~/images/uploads/" + @contender.Thumbnail)" alt="" width="50" />
+                                        @contender.Name
+                                    @:</td>
+                            }
+                            @:</tr>
+                        }
+                </table>
             </div>
         </div>
         <div class="form-group">

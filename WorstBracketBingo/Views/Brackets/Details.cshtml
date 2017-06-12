@@ -1,30 +1,74 @@
 @model WorstBracketBingo.Models.Bracket
-
+@section Scripts
+{
+    <script src="@Url.Content("~/js/bracket.js")"></script>
+}
+@section Styles {
+    <link href="@Url.Content("~/css/bracket.css")" rel="stylesheet" type="text/css" />
+}
 @{
-    ViewData["Title"] = "Details";
+    ViewData["Title"] = Model.Title;
 }
 
-<h2>Details</h2>
-
 <div>
-    <h4>Bracket</h4>
+    <h2>@Model.Title</h2>
     <hr />
-    <dl class="dl-horizontal">
-        <dt>
-            @Html.DisplayNameFor(model => model.Title)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.Title)
-        </dd>
-        <dt>
-            @Html.DisplayNameFor(model => model.Size)
-        </dt>
-        <dd>
-            @Html.DisplayFor(model => model.Size)
-        </dd>
-    </dl>
+    <div>
+        <a asp-action="ViewBoards" asp-route-id="@Model.BracketID">View Bingo Boards</a>
+    </div>
+    <div>
+        <a href="#round-@Model.Rounds.Count">Current Round: @Html.DisplayFor(model => model.Rounds.Count)</a>
+    </div>
 </div>
+@{
+    int rnd = 1;
+    foreach (var round in Model.Rounds)
+    {
+        if(round.RoundNumber == Model.Rounds.Count)
+        { 
+            @:<div id="currentRound">
+        }
+        else
+        {
+            @:<div>
+        }
+            
+        @:<h2 id="round-@rnd">Round @(rnd++)</h2>
+        @:<hr />
+        @:<div class="row">
+
+        int cnt = 0;
+        foreach (var roundContender in round.RoundContenders)
+        {
+            if (cnt++ % 6 == 0)
+            {
+                @:</div><div class="row">
+            }
+            var overlayClass = "contenderOverlay";
+            if (roundContender.Contender.Eliminated == true && roundContender.Contender.RoundsAlive == rnd - 1)
+            {
+                overlayClass = "contenderEliminated";
+            }
+
+            @:<div class="col-md-2 col-xs-3">
+                <div class="thumbnail" data-contenderId="@roundContender.ContenderID">
+                    <div style="position: relative; width: 100%;">
+                        <img class="contenderMain" src="@Url.Content("~/images/uploads/" + @roundContender.Contender.Entrant.Thumbnail)" alt="" />
+                        <img id="contenderOverlay" class="@overlayClass" src="@Url.Content("~/images/cross.png")" alt="" />
+                    </div>
+                    <div class="caption">
+                        <h4>@roundContender.Contender.Entrant.Name</h4>
+                    </div>
+                </div>   
+            @:</div>
+        }
+
+        @:</div>
+        @:</div>
+    }
+}
 <div>
-    <a asp-action="Edit" asp-route-id="@Model.BracketID">Edit</a> |
+    <a asp-action="NextRound" asp-route-id="@Model.BracketID">Start Next Round</a> |
+    <a asp-controller="BingoBoards" asp-action="Create" asp-route-id="@Model.BracketID">Add New Board</a> |
     <a asp-action="Index">Back to List</a>
 </div>

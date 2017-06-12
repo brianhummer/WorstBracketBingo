@@ -13,7 +13,8 @@ namespace WorstBracketBingo.Models
         public bool Eliminated { get; set; }
         public int RoundsAlive { get; set; }
 
-        public Entrant Entrant { get; set; }
-        public Bracket Bracket { get; set; }
+        public virtual Entrant Entrant { get; set; }
+        public virtual Bracket Bracket { get; set; }
+        public ICollection<RoundContender> RoundContenders { get; set; }
     }
 }

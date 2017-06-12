@@ -19,5 +19,13 @@ namespace WorstBracketBingo.Data
         public DbSet<BingoBoard> BingoBoards { get; set; }
         public DbSet<BoardPiece> BoardPieces { get; set; }
         public DbSet<Contender> Contenders { get; set; }
+        public DbSet<Round> Rounds { get; set; }
+        public DbSet<RoundContender> RoundContenders { get; set; }
+        
+        protected override void OnModelCreating(ModelBuilder modelBuilder)
+        {
+            modelBuilder.Entity<RoundContender>()
+                .HasKey(c => new { c.RoundID, c.ContenderID });
+        }
     }
 }

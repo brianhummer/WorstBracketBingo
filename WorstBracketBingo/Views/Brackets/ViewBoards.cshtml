@@ -1,0 +1,54 @@
+﻿@model WorstBracketBingo.Models.Bracket
+@section Styles {
+    <link href="@Url.Content("~/css/bracket.css")" rel="stylesheet" type="text/css" />
+}
+@{
+    ViewData["Title"] = Model.Title + " Boards";
+}
+
+<div>
+    <h2>@Model.Title Boards</h2>
+    <hr />
+    <div>
+        <a asp-action="Details" asp-route-id="@Model.BracketID">Back to Bracket</a>
+    </div>
+</div>
+@{
+    foreach (var board in Model.BingoBoards)
+    {
+        @:<div>
+        @:<h2>@board.Title</h2>
+        @:<hr />
+        @:<div class="row" style="padding-left: 15px">
+
+        int totalRoundsAlive = 0;
+        int cnt = 0;
+        //foreach (var boardPiece in board.BoardPieces)
+        for(int i = 1; i <= board.BoardPieces.Count; i++)
+        {
+            var boardPiece = board.BoardPieces.Single(b => b.BoardPosition == i);
+            totalRoundsAlive += boardPiece.Contender.RoundsAlive;
+            if (cnt++ % 5 == 0)
+            {
+                @:</div><div class="row" style="padding-left: 15px">
+            }
+            @:<div class="col-md-2 col-xs-2" style="padding: 0">
+                @:<div style="position: relative; width: 100%;">
+                    @:<img class="contenderMain" src="@Url.Content("~/images/uploads/" + @boardPiece.Contender.Entrant.Thumbnail)" alt="" />
+                    if(boardPiece.Contender.Eliminated == true)
+                    {
+                        @:<img id="contenderOverlay" class="contenderEliminated" src="@Url.Content("~/images/cross.png")" alt="" />
+
+                    }       
+                @:</div> 
+            @:</div>
+        }        
+
+        @:</div>
+        @:<div><h3>Total Rounds Alive: @totalRoundsAlive</h3></div>
+        @:</div>
+    }
+}
+<div>
+    <a asp-action="Details" asp-route-id="@Model.BracketID">Back to Bracket</a>
+</div>

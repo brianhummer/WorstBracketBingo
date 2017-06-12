@@ -12,7 +12,7 @@ namespace WorstBracketBingo.Models
         public int BingoBoardID { get; set; }
         public int BoardPosition { get; set; }
 
-        public Contender Contender { get; set; }
-        public BingoBoard BingoBoard { get; set; }
+        public virtual Contender Contender { get; set; }
+        public virtual BingoBoard BingoBoard { get; set; }
     }
 }

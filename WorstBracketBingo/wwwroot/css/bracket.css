@@ -1,0 +1,27 @@
+﻿.contenderMain {
+    width: 100%;
+    height: auto;
+}
+
+.contenderOverlay {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0;
+    transition: .5s ease;
+}
+
+.contenderEliminated {
+    position: absolute;
+    height: 100%;
+    width: 100%;
+    top: 0;
+    left: 0;
+    opacity: 0.75;
+}
+
+.contenderContainer:hover .contenderOverlay {
+    opacity: 0.75;
+}

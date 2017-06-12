@@ -13,6 +13,7 @@ namespace WorstBracketBingo.Controllers
 {
     public class BingoBoardsController : Controller
     {
+        private const int REQUIRED_PIECES = 25;
         private readonly BingoContext _context;
 
         public BingoBoardsController(BingoContext context)
@@ -35,6 +36,9 @@ namespace WorstBracketBingo.Controllers
             }
 
             var bingoBoard = await _context.BingoBoards
+                .Include(b => b.Bracket)
+                .Include(b => b.BoardPieces)
+                .AsNoTracking()
                 .SingleOrDefaultAsync(m => m.BingoBoardID == id);
             if (bingoBoard == null)
             {
@@ -45,11 +49,13 @@ namespace WorstBracketBingo.Controllers
         }
 
         // GET: BingoBoards/Create
-        public IActionResult Create()
+        public IActionResult Create(int id)
         {
-            var board = new BingoBoard();
-            board.BoardPieces = new List<BoardPiece>();
-            return View();
+            var bingoBoard = new BingoBoard();
+            bingoBoard.BracketID = id;
+            bingoBoard.BoardPieces = new List<BoardPiece>();
+            PopulateAssignedPieceData(bingoBoard);
+            return View(bingoBoard);
         }
 
         // POST: BingoBoards/Create
@@ -59,19 +65,22 @@ namespace WorstBracketBingo.Controllers
         [ValidateAntiForgeryToken]
         public async Task<IActionResult> Create([Bind("BingoBoardID,BracketID,Title")] BingoBoard bingoBoard, string[] selectedContenders)
         {
+            List<int> positions = new List<int>();
+            for (int i = 1; i <= REQUIRED_PIECES; i++)
+                positions.Add(i);
+
+            var rand = new Random(DateTime.Now.Millisecond);
+
             if (selectedContenders != null)
             {
-                List<int> positions = new List<int> { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25 };
-                var rand = new Random();
-
                 bingoBoard.BoardPieces = new List<BoardPiece>();
                 foreach (var contender in selectedContenders)
                 {
-                    var index = rand.Next(0, positions.Count);
-                    positions.Remove(positions[index]);
-                    
-                    var contenderToAdd = new BoardPiece { BingoBoardID = bingoBoard.BingoBoardID, ContenderID = int.Parse(contender), BoardPosition = index };
-                    bingoBoard.BoardPieces.Add(contenderToAdd);
+                    var pos = rand.Next(0, positions.Count);
+                    var boardPieceToAdd = new BoardPiece { BingoBoardID = bingoBoard.BingoBoardID, ContenderID = int.Parse(contender), BoardPosition = positions[pos]};
+                    positions.Remove(positions[pos]);
+
+                    bingoBoard.BoardPieces.Add(boardPieceToAdd);
                 }
             }
 
@@ -79,8 +88,9 @@ namespace WorstBracketBingo.Controllers
             {
                 _context.Add(bingoBoard);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Index");
+                return RedirectToAction("Details", "Brackets", new { id = bingoBoard.BracketID });
             }
+            PopulateAssignedPieceData(bingoBoard);
             return View(bingoBoard);
         }
 
@@ -93,13 +103,14 @@ namespace WorstBracketBingo.Controllers
             }
 
             var bingoBoard = await _context.BingoBoards
-                .Include(b => b.BoardPieces)
+                .Include(b => b.BoardPieces).ThenInclude(b => b.Contender)
                 .AsNoTracking()
                 .SingleOrDefaultAsync(m => m.BingoBoardID == id);
             if (bingoBoard == null)
             {
                 return NotFound();
             }
+            PopulateAssignedPieceData(bingoBoard);
             return View(bingoBoard);
         }
 
@@ -108,34 +119,116 @@ namespace WorstBracketBingo.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Edit(int id, [Bind("BingoBoardID,BracketID,Title")] BingoBoard bingoBoard)
+        public async Task<IActionResult> Edit(int? id, string[] selectedContenders)
         {
-            if (id != bingoBoard.BingoBoardID)
+            if (id == null)
             {
                 return NotFound();
             }
 
-            if (ModelState.IsValid)
+            var boardToUpdate = await _context.BingoBoards
+                .Include(i => i.BoardPieces)
+                    .ThenInclude(i => i.Contender)
+                .SingleOrDefaultAsync(m => m.BingoBoardID == id);
+
+            if (await TryUpdateModelAsync<BingoBoard>(boardToUpdate, "", i => i.Title))
             {
+                UpdateBoardContenders(selectedContenders, boardToUpdate);
                 try
                 {
-                    _context.Update(bingoBoard);
                     await _context.SaveChangesAsync();
                 }
-                catch (DbUpdateConcurrencyException)
+                catch (DbUpdateException /* ex */)
                 {
-                    if (!BingoBoardExists(bingoBoard.BingoBoardID))
-                    {
-                        return NotFound();
-                    }
-                    else
-                    {
-                        throw;
-                    }
+                    //Log the error (uncomment ex variable name and write a log.)
+                    ModelState.AddModelError("", "Unable to save changes. " +
+                        "Try again, and if the problem persists, " +
+                        "see your system administrator.");
                 }
                 return RedirectToAction("Index");
             }
-            return View(bingoBoard);
+            UpdateBoardContenders(selectedContenders, boardToUpdate);
+            PopulateAssignedPieceData(boardToUpdate);
+            return View(boardToUpdate);
+        }
+
+        private void PopulateBracketsDropDownList(object selectedBracket = null)
+        {
+            var bracketQuery = from b in _context.Brackets
+                                   orderby b.Title
+                                   select b;
+            ViewBag.BracketID = new SelectList(bracketQuery.AsNoTracking(), "BracketID", "Title", selectedBracket);
+        }
+
+        private void PopulateAssignedPieceData(BingoBoard bingoBoard)
+        {
+            var allContenders = _context.Contenders
+                .Where(b => b.BracketID == bingoBoard.BracketID)
+                .Include(c => c.Entrant);
+            var bracketContenders = new HashSet<int>(bingoBoard.BoardPieces.Select(c => c.ContenderID));
+            var viewModel = new List<AssignedContenderData>();
+            foreach (var contender in allContenders)
+            {
+                viewModel.Add(new AssignedContenderData
+                {
+                    ContenderID = contender.ContenderID,
+                    Name = contender.Entrant.Name,
+                    Thumbnail = contender.Entrant.Thumbnail,
+                    Assigned = bracketContenders.Contains(contender.ContenderID)
+                });
+            }
+            ViewData["Contenders"] = viewModel;
+        }
+
+        private void UpdateBoardContenders(string[] selectedContenders, BingoBoard boardToUpdate)
+        {
+            if (selectedContenders == null)
+            {
+                boardToUpdate.BoardPieces = new List<BoardPiece>();
+                return;
+            }
+
+            List<int> positions = new List<int>();
+            for (int i = 1; i <= REQUIRED_PIECES; i++)
+                positions.Add(i);
+            var rand = new Random(DateTime.Now.Millisecond);
+
+            var selectedContendersHS = new HashSet<string>(selectedContenders);
+            var boardContenders = new HashSet<int>(boardToUpdate.BoardPieces.Select(c => c.Contender.ContenderID));
+            foreach (var contender in _context.Contenders)
+            {
+                if (selectedContendersHS.Contains(contender.ContenderID.ToString()))
+                {
+                    if (!boardContenders.Contains(contender.ContenderID))
+                    {
+                        boardToUpdate.BoardPieces.Add(new BoardPiece { BingoBoardID = boardToUpdate.BingoBoardID, ContenderID = contender.ContenderID});
+                    }
+                }
+                else
+                {
+                    if (boardContenders.Contains(contender.EntrantID))
+                    {
+                        BoardPiece boardPieceToRemove = boardToUpdate.BoardPieces.SingleOrDefault(i => i.ContenderID == contender.ContenderID);
+                        _context.Remove(boardPieceToRemove);
+                    }
+                }
+            }
+
+            foreach(var boardPiece in boardToUpdate.BoardPieces)
+            {
+                if (boardPiece.BoardPosition == 0)
+                    positions.Remove(boardPiece.BoardPosition);
+            }
+
+            foreach(var boardPiece in boardToUpdate.BoardPieces)
+            {
+                if(boardPiece.BoardPosition == 0)
+                {
+                    var pos = rand.Next(0, positions.Count);
+                    boardPiece.BoardPosition = positions[pos];
+                    positions.Remove(positions[pos]);
+                }
+            }
         }
 
         // GET: BingoBoards/Delete/5
@@ -147,6 +240,8 @@ namespace WorstBracketBingo.Controllers
             }
 
             var bingoBoard = await _context.BingoBoards
+                .Include(b => b.BoardPieces)
+                .AsNoTracking()
                 .SingleOrDefaultAsync(m => m.BingoBoardID == id);
             if (bingoBoard == null)
             {

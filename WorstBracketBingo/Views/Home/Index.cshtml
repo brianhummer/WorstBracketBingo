@@ -1,5 +1,7 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model IEnumerable<WorstBracketBingo.Models.Bracket>
+
+@{
+    ViewData["Title"] = "Home";
 }
 
 <div class="jumbotron">
@@ -7,9 +9,19 @@
 </div>
 <div class="row">
     <div class="col-md-12">
-        <h2>Welcome to Worst Bracket Bingo</h2>
-        <p>
-            Filler text
-        </p>
+        <h2>Current Brackets</h2>
+        <ul class="list-group">
+        @foreach (var item in Model)
+        {
+            <li class="list-group-item list-group-item-success">
+                <a class="list-group-item" asp-controller="Brackets" asp-action="Details" asp-route-id="@item.BracketID">
+                    <h4 class="list-group-item-heading">@Html.DisplayFor(modelItem => item.Title)</h4>
+                </a>
+                <a class="list-group-item" asp-controller="Brackets" asp-action="ViewBoards" asp-route-id="@item.BracketID">
+                    <p class="list-group-item-text">View Bingo Boards</p>
+                </a>
+            </li>
+        }
+        </ul>
     </div>
 </div>

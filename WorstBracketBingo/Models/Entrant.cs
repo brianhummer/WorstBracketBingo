@@ -12,7 +12,6 @@ namespace WorstBracketBingo.Models
         [Required]
         public string Name { get; set; }
         public string Tag { get; set; }
-        [Required]
         public string Thumbnail { get; set; }
     }
 }

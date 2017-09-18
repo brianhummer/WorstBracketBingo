@@ -75,8 +75,7 @@ namespace WorstBracketBingo.Controllers
                         
                         if (file.Length > 0)
                         {
-                            var fileName = ContentDispositionHeaderValue.Parse
-                                (file.ContentDisposition).FileName.Trim('"');
+                            var fileName = HeaderUtilities.RemoveQuotes(file.FileName).ToString();
                             var fileType = fileName.Split('.').Last();
                             var uniqueFileName = string.Format(@"{0}." + fileType, DateTime.Now.Ticks);
 

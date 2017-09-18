@@ -36,7 +36,7 @@ namespace WorstBracketBingo.Data
                 new Entrant{ Name="Shana", Tag="Shakugan no Shana", Thumbnail="ShitTasteBingo-Shana.jpg"},
                 new Entrant{ Name="Yui Yuigahama", Tag="Snafu", Thumbnail="ShitTasteBingo-YuiYuigahama.jpg"},
                 new Entrant{ Name="Ryoko Hakubi", Tag="Tenchi Muyo", Thumbnail="ShitTasteBingo-RyokoHakubi.jpg"},
-                new Entrant{ Name="Le Blanc de La Vallière", Tag="Louise Françoise(383) Zero no Tsukaima", Thumbnail="ShitTasteBingo-LouiseTheZero.jpg"},
+                new Entrant{ Name="Louise Françoise", Tag="The Familiar of Zero", Thumbnail="ShitTasteBingo-LouiseTheZero.jpg"},
                 new Entrant{ Name="Moka Akashiya", Tag="Rosario + Vampire", Thumbnail="ShitTasteBingo-MokaAkashiya.jpg"},
                 new Entrant{ Name="Morgiana", Tag="Magi", Thumbnail="ShitTasteBingo-Morgiana.jpg"},
                 new Entrant{ Name="Simca", Tag="Air Gear!", Thumbnail="ShitTasteBingo-Simca.jpg"},

@@ -27,7 +27,7 @@ namespace WorstBracketBingo.Controllers
         }
 
         // GET: Brackets/Details/5
-        public async Task<IActionResult> Details(int? id)
+        public async Task<IActionResult> Details(int? id, int? round)
         {
             if (id == null)
             {
@@ -35,23 +35,30 @@ namespace WorstBracketBingo.Controllers
             }
 
             var bracket = await _context.Brackets
-                .Include(b => b.BingoBoards)
-                .Include(b => b.Contenders)
-                    .ThenInclude(c => c.Entrant)
                 .Include(b => b.Rounds)
                     .ThenInclude(r => r.RoundContenders)
                     .ThenInclude(r => r.Contender)
                     .ThenInclude(r => r.Entrant)
+                .AsNoTracking()
                 .SingleOrDefaultAsync(m => m.BracketID == id);
-
-            bracket.Rounds.OrderBy(o => o.RoundNumber);
 
             if (bracket == null)
             {
                 return NotFound();
             }
 
-            return View(bracket);
+            int selectedRound = round == null ? bracket.Rounds.Count - 1 : (int)round;
+
+            var bracketViewModel = new BracketDetailsViewModel();
+            bracketViewModel.BracketID = bracket.BracketID;
+            bracketViewModel.Title = bracket.Title;
+            bracketViewModel.NumRounds = bracket.Rounds.Count;
+            bracketViewModel.Round = bracket.Rounds.SingleOrDefault(r => r.RoundNumber == selectedRound);
+
+            if(bracketViewModel.Round != null)
+                bracketViewModel.Round.RoundContenders = bracketViewModel.Round.RoundContenders.OrderBy(r => r.Contender.Entrant.Name).ToList();
+
+            return View(bracketViewModel);
         }
 
         // GET: Brackets/Create
@@ -83,6 +90,7 @@ namespace WorstBracketBingo.Controllers
             }
 
             bracket.Rounds = new List<Round>();
+            
 
             if (ModelState.IsValid)
             {
@@ -212,7 +220,7 @@ namespace WorstBracketBingo.Controllers
         private void AddNewRound(Bracket bracketToUpdate)
         {
             var round = new Round();
-            round.RoundNumber = bracketToUpdate.Rounds.Count + 1;
+            round.RoundNumber = bracketToUpdate.Rounds.Count;
             round.RoundContenders = new List<RoundContender>();
 
             foreach (var contender in bracketToUpdate.Contenders)

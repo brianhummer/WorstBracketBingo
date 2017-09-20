@@ -10,7 +10,7 @@
 <div>
     <hr />
     <div>
-        <a asp-action="ViewBoards" asp-route-id="@Model.BracketID" class="btn btn-primary">View Bingo Boards</a>
+        <a asp-action="Boards" asp-route-id="@Model.BracketID" class="btn btn-primary">View Bingo Boards</a>
         @if (Model.NumRounds <= 1)
         {
             <a asp-controller="BingoBoards" asp-action="Create" asp-route-id="@Model.BracketID" class="btn btn-primary">New Board</a>
@@ -120,7 +120,7 @@ else
         <a asp-action="Details" asp-route-id="@Model.BracketID" class="btn btn-secondary">Current Round</a>
 
     }
-    <a asp-action="Index" class="btn btn-secondary">Back to List</a>
+    <a asp-action="Index" class="btn btn-secondary">Back to Brackets</a>
 </div>
 
 <!-- Modal -->

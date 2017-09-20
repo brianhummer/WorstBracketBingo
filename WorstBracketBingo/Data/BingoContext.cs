@@ -21,6 +21,7 @@ namespace WorstBracketBingo.Data
         public DbSet<Contender> Contenders { get; set; }
         public DbSet<Round> Rounds { get; set; }
         public DbSet<RoundContender> RoundContenders { get; set; }
+        public DbSet<Bingo> Bingos { get; set; }
         
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {

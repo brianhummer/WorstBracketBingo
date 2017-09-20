@@ -13,5 +13,6 @@ namespace WorstBracketBingo.Models
 
         public virtual Bracket Bracket { get; set; }
         public virtual IList<BoardPiece> BoardPieces { get; set; }
+        public IList<Bingo> Bingos { get; set; }
     }
 }

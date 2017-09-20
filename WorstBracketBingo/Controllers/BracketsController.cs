@@ -175,7 +175,13 @@ namespace WorstBracketBingo.Controllers
 
             if (await TryUpdateModelAsync<Bracket>(bracketToUpdate, "", i => i.Title))
             {
+                if(bracketToUpdate.Rounds.Count > 0)
+                {
+                    await CalculateBingos(bracketToUpdate);
+                }
+
                 AddNewRound(bracketToUpdate);
+
                 try
                 {
                     await _context.SaveChangesAsync();
@@ -193,8 +199,8 @@ namespace WorstBracketBingo.Controllers
             return View(bracketToUpdate);
         }
 
-        // GET: Brackets/ViewBoards/5
-        public async Task<IActionResult> ViewBoards(int? id)
+        // GET: Brackets/Boards/5
+        public async Task<IActionResult> Boards(int? id)
         {
             if (id == null)
             {
@@ -203,9 +209,9 @@ namespace WorstBracketBingo.Controllers
 
             var bracket = await _context.Brackets
                 .Include(b => b.BingoBoards)
-                .ThenInclude(b => b.BoardPieces)
-                .ThenInclude(b => b.Contender)
-                .ThenInclude(b => b.Entrant)
+                    .ThenInclude(b => b.BoardPieces)
+                    .ThenInclude(b => b.Contender)
+                    .ThenInclude(b => b.Entrant)
                 .AsNoTracking()
                 .SingleOrDefaultAsync(m => m.BracketID == id);
 
@@ -220,6 +226,162 @@ namespace WorstBracketBingo.Controllers
             }
 
             return View(bracket);
+        }
+
+        private async Task CalculateBingos(Bracket bracket)
+        {
+            var boards = await _context.BingoBoards
+                .Include(b => b.BoardPieces)
+                    .ThenInclude(b => b.Contender)
+                .Where(b => b.BracketID == bracket.BracketID)
+                .AsNoTracking()
+                .ToListAsync();
+
+            for (int i = 0; i < boards.Count; i++)
+            {
+                boards[i].BoardPieces = boards[i].BoardPieces.OrderBy(b => b.BoardPosition).ToList();
+            }
+
+            var numCol = 5;
+            var numRow = 5;
+
+            for(int i = 0; i < boards.Count; i++)
+            {
+                // check for row bingos
+                for (int c = 0; c < numCol; c++)
+                {
+                    var horizontalBingo = true;
+                    for (int r = 0; r < numRow; r++)
+                    {
+                        var index = c * numCol + r;
+                        if (boards[i].BoardPieces[index].Contender.Eliminated == false)
+                        {
+                            horizontalBingo = false;
+                            break;
+                        }
+                    }
+
+                    if(horizontalBingo == true)
+                    {
+                        //add bingo
+                        var bingo = new Bingo
+                        {
+                            BracketId = bracket.BracketID,
+                            BoardId = boards[i].BingoBoardID,
+                            RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
+                            Label = "Row " + (c + 1)
+                        };
+
+                        if(!bingoExists(boards[i].BingoBoardID, bingo.Label))
+                        {
+                            _context.Add(bingo);
+                        }
+                    }
+                }
+
+                // check for col bingos
+                for (int r = 0; r < numRow; r++)
+                {
+                    var verticalBingo = true;
+                    for (int c = 0; c < numCol; c++)
+                    {
+                        var index = c * numCol + r;
+                        if (boards[i].BoardPieces[index].Contender.Eliminated == false)
+                        {
+                            verticalBingo = false;
+                            break;
+                        }
+                    }
+
+                    if (verticalBingo == true)
+                    {
+                        //add bingo
+                        var bingo = new Bingo
+                        {
+                            BracketId = bracket.BracketID,
+                            BoardId = boards[i].BingoBoardID,
+                            RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
+                            Label = "Column " + (r + 1)
+                        };
+
+                        if (!bingoExists(boards[i].BingoBoardID, bingo.Label))
+                        {
+                            _context.Add(bingo);
+                        }
+                    }
+                }
+
+                // check for diag top left to bot right bingos
+                var diagonalBingo = true;
+                for (int j = 0; j < numRow; j++)
+                {
+                    var index = j + j * numCol;
+                    if (boards[i].BoardPieces[index].Contender.Eliminated == false)
+                    {
+                        diagonalBingo = false;
+                        break;
+                    }
+                }
+                if(diagonalBingo == true)
+                {
+                    //add bingo
+                    var bingo = new Bingo
+                    {
+                        BracketId = bracket.BracketID,
+                        BoardId = boards[i].BingoBoardID,
+                        RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
+                        Label = "Diagonal Top Left to Bottom Right"
+                    };
+
+                    if (!bingoExists(boards[i].BingoBoardID, bingo.Label))
+                    {
+                        _context.Add(bingo);
+                    }
+                }
+
+                // check for diag top left to bot right bingos
+                diagonalBingo = true;
+                for (int j = 0; j < numRow; j++)
+                {
+                    //4 - 0, 9 - 1, 14 - 2, 19 - 3, 24 - 4
+                    var index = numCol * j + (numCol - 1) - j;
+
+                    if (boards[i].BoardPieces[index].Contender.Eliminated == false)
+                    {
+                        diagonalBingo = false;
+                        break;
+                    }
+
+                }
+                if(diagonalBingo == true)
+                {
+                    //add bingo
+                    var bingo = new Bingo
+                    {
+                        BracketId = bracket.BracketID,
+                        BoardId = boards[i].BingoBoardID,
+                        RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
+                        Label = "Diagonal Top Left to Bottom Right"
+                    };
+
+                    if (!bingoExists(boards[i].BingoBoardID, bingo.Label))
+                    {
+                        _context.Add(bingo);
+                    }
+                }
+            }
+
+            await _context.SaveChangesAsync();
+        }
+
+        private bool bingoExists(int boardId, string label)
+        {
+            var existingBingo = _context.Bingos
+                .Where(b => b.BoardId == boardId && b.Label == label)
+                .AsNoTracking()
+                .Any();
+
+            return existingBingo;
         }
 
         private void AddNewRound(Bracket bracketToUpdate)

@@ -11,5 +11,6 @@ namespace WorstBracketBingo.Models
         public int RoundNumber { get; set; }
 
         public ICollection<RoundContender> RoundContenders { get; set; }
+        public List<Bingo> Bingos { get; set; }
     }
 }

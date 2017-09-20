@@ -31,24 +31,5 @@
                 });
             });
         });
-
-        /*
-        $.ajax({
-            url: '/Contenders/UpdateEliminationStatus/' + $(this).attr("data-contenderId"),
-            type: 'POST',
-            success: function (obj) {
-                var div = thumbDiv.find("#contenderOverlay");
-
-                if (obj.eliminated == true) {
-                    div.removeClass("contenderOverlay");
-                    div.addClass("contenderEliminated");
-
-                }
-                else {
-                    div.addClass("contenderOverlay");
-                    div.removeClass("contenderEliminated");
-                }
-            }
-        });*/
     });
 });

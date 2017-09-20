@@ -214,6 +214,11 @@ namespace WorstBracketBingo.Controllers
                 return NotFound();
             }
 
+            foreach (var board in bracket.BingoBoards)
+            {
+                board.BoardPieces = board.BoardPieces.OrderBy(b => b.BoardPosition).ToList();
+            }
+
             return View(bracket);
         }
 

@@ -83,7 +83,7 @@
                             @roundContender.Contender.Entrant.Tag
                         }
                     </td>
-                    @if (Model.Round.RoundNumber > Model.NumRounds - 1)
+                    @if (Model.Round.RoundNumber >= Model.NumRounds - 1)
                     {
                         eliminated = roundContender.Contender.Eliminated ? "disabled" : "";
                         <td class="align-middle">
@@ -110,7 +110,7 @@ else
     </div>
 }
 <div>
-    @if(Model.Round.RoundNumber == Model.NumRounds - 1)
+    @if(Model.Round == null || Model.Round.RoundNumber == Model.NumRounds - 1)
     {
         var nextRoundEnabled = Model.Round != null && Model.Round.RoundContenders.Count == 1 ? "disabled" : "";
         <a asp-action="NextRound" asp-route-id="@Model.BracketID" class="btn btn-secondary @nextRoundEnabled">Start Next Round</a>

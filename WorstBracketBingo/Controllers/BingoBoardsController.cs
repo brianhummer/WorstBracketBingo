@@ -66,7 +66,7 @@ namespace WorstBracketBingo.Controllers
         public async Task<IActionResult> Create([Bind("BingoBoardID,BracketID,Title")] BingoBoard bingoBoard, string[] selectedContenders)
         {
             List<int> positions = new List<int>();
-            for (int i = 1; i <= REQUIRED_PIECES; i++)
+            for (int i = 0; i < REQUIRED_PIECES; i++)
                 positions.Add(i);
 
             var rand = new Random(DateTime.Now.Millisecond);

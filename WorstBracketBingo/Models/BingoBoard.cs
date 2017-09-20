@@ -12,6 +12,6 @@ namespace WorstBracketBingo.Models
         public string Title { get; set; }
 
         public virtual Bracket Bracket { get; set; }
-        public virtual ICollection<BoardPiece> BoardPieces { get; set; }
+        public virtual IList<BoardPiece> BoardPieces { get; set; }
     }
 }

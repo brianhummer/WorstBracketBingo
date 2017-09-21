@@ -8,7 +8,7 @@ namespace WorstBracketBingo.Models
     public class Bingo
     {
         public int Id { get; set; }
-        public int BoardId { get; set; }
+        public int BingoBoardId { get; set; }
         public int BracketId { get; set; }
         public int RoundId { get; set; }
         public string Label { get; set; }

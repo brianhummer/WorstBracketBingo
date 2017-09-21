@@ -1,22 +1,39 @@
-﻿@model WorstBracketBingo.Models.Bracket
+﻿@model WorstBracketBingo.Models.BracketBingoViewModels.BoardsViewModel
 
 @{
-    ViewData["Title"] = Model.Title + " Boards";
+    ViewData["Title"] = Model.Bracket.Title + " Boards";
 }
 
 <div>
-    <h2>@Model.Title Boards</h2>
+    <h2>@ViewData["Title"]</h2>
     <hr />
     <div class="mb-3">
-        <a asp-action="Details" asp-route-id="@Model.BracketID" class="btn btn-secondary">Back to Bracket</a>
+        <a asp-action="Details" asp-route-id="@Model.Bracket.BracketID" class="btn btn-secondary">Back to Bracket</a>
     </div>
 </div>
+
+@if (Model.FirstBingos != null && Model.FirstBingos.Count > 0)
+{
+    <h4>Results</h4>
+    <dl class="row">
+        <dt class="col-sm-3">
+            First Bingo
+        </dt>
+        <dd class="col-sm-9">
+            Round @Model.FirstBingos.First().Round.RoundNumber<br />
+            @for(int i = 0; i < Model.FirstBingos.Count(); i++)
+            {
+                @Model.FirstBingos[i].BingoBoard.Title<br />
+            }
+        </dd>
+    </dl>
+}
 
 @{ 
     var first = true;
 }
 <ul class="nav nav-pills nav-fill mb-3" id="pills-tab" role="tablist">
-    @foreach (var board in Model.BingoBoards)
+    @foreach (var board in Model.Bracket.BingoBoards)
     {
         var active = "";
         if(first == true)
@@ -35,7 +52,7 @@
     first = true;
 }
 <div class="tab-content" id="pills-tabContent">
-    @foreach (var board in Model.BingoBoards)
+    @foreach (var board in Model.Bracket.BingoBoards)
     {
         var active = "";
         if (first == true)
@@ -73,7 +90,7 @@
 </div>
 
 <div class="mt-3">
-    <a asp-action="Details" asp-route-id="@Model.BracketID" class="btn btn-secondary">Back to Bracket</a>
+    <a asp-action="Details" asp-route-id="@Model.Bracket.BracketID" class="btn btn-secondary">Back to Bracket</a>
 </div>
 
 @section Scripts {

@@ -209,6 +209,9 @@ namespace WorstBracketBingo.Controllers
 
             var bracket = await _context.Brackets
                 .Include(b => b.BingoBoards)
+                    .ThenInclude(b => b.Bingos)
+                    .ThenInclude(b => b.Round)
+                .Include(b => b.BingoBoards)
                     .ThenInclude(b => b.BoardPieces)
                     .ThenInclude(b => b.Contender)
                     .ThenInclude(b => b.Entrant)
@@ -220,12 +223,56 @@ namespace WorstBracketBingo.Controllers
                 return NotFound();
             }
 
+            int firstBingoRound = int.MaxValue;
+            int lastBingoRound = 0;
+            bool noBingo = false;
+
+            foreach (var board in bracket.BingoBoards)
+            {
+                board.Bingos = board.Bingos.OrderBy(b => b.Round.RoundNumber).ToList();
+
+                if(board.Bingos.Count == 0)
+                {
+                    noBingo = true;
+                }
+                else
+                {
+                    var bingoRound = board.Bingos.First().Round.RoundNumber;
+                    if (bingoRound < firstBingoRound)
+                    {
+                        firstBingoRound = bingoRound;
+                    }
+                    if (bingoRound > lastBingoRound)
+                    {
+                        lastBingoRound = bingoRound;
+                    }
+                }
+            }
+
+            var boardsViewModel = new BoardsViewModel();
+            boardsViewModel.Bracket = bracket;
+            boardsViewModel.FirstBingos = await GetBingosByRound(bracket.BracketID, firstBingoRound);
+            if(noBingo == false)
+                boardsViewModel.FirstBingos = await GetBingosByRound(bracket.BracketID, lastBingoRound);
+
             foreach (var board in bracket.BingoBoards)
             {
                 board.BoardPieces = board.BoardPieces.OrderBy(b => b.BoardPosition).ToList();
             }
 
-            return View(bracket);
+            return View(boardsViewModel);
+        }
+
+        private async Task<IList<Bingo>> GetBingosByRound(int bracketId, int roundNumber)
+        {
+            var bingos = await _context.Bingos
+                .Include(b => b.Round)
+                .Include(b => b.BingoBoard)
+                .Where(b => b.BracketId == bracketId && b.Round.RoundNumber == roundNumber)
+                .AsNoTracking()
+                .ToListAsync();
+
+            return bingos;
         }
 
         private async Task CalculateBingos(Bracket bracket)
@@ -267,7 +314,7 @@ namespace WorstBracketBingo.Controllers
                         var bingo = new Bingo
                         {
                             BracketId = bracket.BracketID,
-                            BoardId = boards[i].BingoBoardID,
+                            BingoBoardId = boards[i].BingoBoardID,
                             RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
                             Label = "Row " + (c + 1)
                         };
@@ -299,7 +346,7 @@ namespace WorstBracketBingo.Controllers
                         var bingo = new Bingo
                         {
                             BracketId = bracket.BracketID,
-                            BoardId = boards[i].BingoBoardID,
+                            BingoBoardId = boards[i].BingoBoardID,
                             RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
                             Label = "Column " + (r + 1)
                         };
@@ -328,7 +375,7 @@ namespace WorstBracketBingo.Controllers
                     var bingo = new Bingo
                     {
                         BracketId = bracket.BracketID,
-                        BoardId = boards[i].BingoBoardID,
+                        BingoBoardId = boards[i].BingoBoardID,
                         RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
                         Label = "Diagonal Top Left to Bottom Right"
                     };
@@ -359,7 +406,7 @@ namespace WorstBracketBingo.Controllers
                     var bingo = new Bingo
                     {
                         BracketId = bracket.BracketID,
-                        BoardId = boards[i].BingoBoardID,
+                        BingoBoardId = boards[i].BingoBoardID,
                         RoundId = bracket.Rounds.OrderBy(x => x.RoundNumber).Last().RoundID,
                         Label = "Diagonal Top Left to Bottom Right"
                     };
@@ -377,7 +424,7 @@ namespace WorstBracketBingo.Controllers
         private bool bingoExists(int boardId, string label)
         {
             var existingBingo = _context.Bingos
-                .Where(b => b.BoardId == boardId && b.Label == label)
+                .Where(b => b.BingoBoardId == boardId && b.Label == label)
                 .AsNoTracking()
                 .Any();
 

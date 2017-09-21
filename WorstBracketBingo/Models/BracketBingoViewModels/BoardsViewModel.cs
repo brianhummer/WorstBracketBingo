@@ -5,7 +5,7 @@ using System.Threading.Tasks;
 
 namespace WorstBracketBingo.Models.BracketBingoViewModels
 {
-    public class BoardViewModel
+    public class BoardsViewModel
     {
         public IList<Bingo> FirstBingos { get; set; }
         public IList<Bingo> LastBingos { get; set; }

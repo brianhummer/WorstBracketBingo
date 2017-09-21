@@ -177,10 +177,10 @@ namespace WorstBracketBingo.Controllers
             {
                 if(bracketToUpdate.Rounds.Count > 0)
                 {
-                    await CalculateBingos(bracketToUpdate);
+                    await ProcessRoundResults(bracketToUpdate);
                 }
 
-                AddNewRound(bracketToUpdate);
+                await AddNewRound(bracketToUpdate);
 
                 try
                 {
@@ -195,7 +195,7 @@ namespace WorstBracketBingo.Controllers
                 }
                 return RedirectToAction("Details",new { id = id });
             }
-            AddNewRound(bracketToUpdate);
+
             return View(bracketToUpdate);
         }
 
@@ -215,6 +215,7 @@ namespace WorstBracketBingo.Controllers
                     .ThenInclude(b => b.BoardPieces)
                     .ThenInclude(b => b.Contender)
                     .ThenInclude(b => b.Entrant)
+                .Include(b => b.Rounds)
                 .AsNoTracking()
                 .SingleOrDefaultAsync(m => m.BracketID == id);
 
@@ -230,8 +231,7 @@ namespace WorstBracketBingo.Controllers
             foreach (var board in bracket.BingoBoards)
             {
                 board.Bingos = board.Bingos.OrderBy(b => b.Round.RoundNumber).ToList();
-
-                if(board.Bingos.Count == 0)
+                if (board.Bingos.Count == 0)
                 {
                     noBingo = true;
                 }
@@ -253,12 +253,44 @@ namespace WorstBracketBingo.Controllers
             boardsViewModel.Bracket = bracket;
             boardsViewModel.FirstBingos = await GetBingosByRound(bracket.BracketID, firstBingoRound);
             if(noBingo == false)
-                boardsViewModel.FirstBingos = await GetBingosByRound(bracket.BracketID, lastBingoRound);
+                boardsViewModel.LastBingos = await GetBingosByRound(bracket.BracketID, lastBingoRound);
 
+            if(boardsViewModel.LastBingos != null)
+            {
+                for (int i = 0; i < boardsViewModel.FirstBingos.Count; i++)
+                {
+                    var boardId = boardsViewModel.FirstBingos[i].BingoBoardId;
+                    for (int j = boardsViewModel.LastBingos.Count - 1; j >= 0; j--)
+                    {
+                        if (boardsViewModel.LastBingos[j].BingoBoardId == boardId)
+                            boardsViewModel.LastBingos.RemoveAt(j);
+                    }
+                }
+            }
+
+            var firstRoundElimination = int.MaxValue;
             foreach (var board in bracket.BingoBoards)
             {
                 board.BoardPieces = board.BoardPieces.OrderBy(b => b.BoardPosition).ToList();
+
+                if(board.RoundEliminated != 0 && board.RoundEliminated < firstRoundElimination)
+                {
+                    firstRoundElimination = board.RoundEliminated;
+                }
             }
+
+
+            var firstElims = from b in bracket.BingoBoards
+                             where b.RoundEliminated == firstRoundElimination
+                             select b.Title;
+
+            boardsViewModel.FirstElimination = new FirstEliminationViewModel
+            {
+                BracketTitles = firstElims.ToList(),
+                RoundNumber = firstRoundElimination
+            };
+
+            boardsViewModel.CurrentRound = bracket.Rounds.Max(r => r.RoundNumber) - 1;
 
             return View(boardsViewModel);
         }
@@ -275,13 +307,12 @@ namespace WorstBracketBingo.Controllers
             return bingos;
         }
 
-        private async Task CalculateBingos(Bracket bracket)
+        private async Task ProcessRoundResults(Bracket bracket)
         {
             var boards = await _context.BingoBoards
                 .Include(b => b.BoardPieces)
                     .ThenInclude(b => b.Contender)
                 .Where(b => b.BracketID == bracket.BracketID)
-                .AsNoTracking()
                 .ToListAsync();
 
             for (int i = 0; i < boards.Count; i++)
@@ -418,6 +449,24 @@ namespace WorstBracketBingo.Controllers
                 }
             }
 
+            for (int i = 0; i < boards.Count; i++)
+            {
+                var isEliminated = true;
+                for (int j = 0; j < boards[i].BoardPieces.Count; j++)
+                {
+                    if (!boards[i].BoardPieces[j].Contender.Eliminated)
+                    {
+                        isEliminated = false;
+                        break;
+                    }
+                }
+
+                if (isEliminated == true)
+                {
+                    boards[i].RoundEliminated = bracket.Rounds.Max(r => r.RoundNumber);
+                }
+            }
+
             await _context.SaveChangesAsync();
         }
 
@@ -431,7 +480,7 @@ namespace WorstBracketBingo.Controllers
             return existingBingo;
         }
 
-        private void AddNewRound(Bracket bracketToUpdate)
+        private async Task AddNewRound(Bracket bracketToUpdate)
         {
             var round = new Round();
             round.RoundNumber = bracketToUpdate.Rounds.Count;
@@ -446,7 +495,28 @@ namespace WorstBracketBingo.Controllers
                 }
             }
 
+            await UpdateBoadRoundsAlive(bracketToUpdate.BracketID);
             bracketToUpdate.Rounds.Add(round);
+        }
+
+        private async Task UpdateBoadRoundsAlive(int bracketId)
+        {
+            var boards = await _context.BingoBoards
+                .Include(b => b.BoardPieces)
+                    .ThenInclude(b => b.Contender)
+                .Where(b => b.BracketID == bracketId)
+                .ToListAsync();
+
+            for(int i = 0; i < boards.Count; i++)
+            {
+                var roundsAlive = 0;
+                for(var j = 0; j < boards[i].BoardPieces.Count; j++)
+                {
+                    roundsAlive += boards[i].BoardPieces[j].Contender.RoundsAlive;
+                }
+
+                boards[i].ContenderRoundsAlive = roundsAlive;
+            }
         }
 
         private void PopulateAssignedRoundData(Round round)

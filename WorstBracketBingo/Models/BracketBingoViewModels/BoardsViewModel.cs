@@ -9,7 +9,9 @@ namespace WorstBracketBingo.Models.BracketBingoViewModels
     {
         public IList<Bingo> FirstBingos { get; set; }
         public IList<Bingo> LastBingos { get; set; }
+        public FirstEliminationViewModel FirstElimination { get; set; }
         public Bracket Bracket { get; set; }
+        public int CurrentRound { get; set; }
         
 
     }

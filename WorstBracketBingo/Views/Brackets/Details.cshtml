@@ -90,13 +90,6 @@
                             <button id="eliminateBtn" class="btn btn-danger" data-contenderId="@roundContender.ContenderID" @eliminated>Eliminate</button>
                         </td>
                     }
-                    else if (Model.Round.RoundContenders.Count == 1)
-                    {
-                        <td class="align-middle">
-                            <span class="text-success"><strong>Best Taste</strong></span>
-                        </td>
-
-                    }
                 </tr>
             }
         </table>
@@ -110,10 +103,14 @@ else
     </div>
 }
 <div>
-    @if(Model.Round == null || Model.Round.RoundNumber == Model.NumRounds - 1)
+    @if (Model.Round == null || Model.Round.RoundNumber == Model.NumRounds - 1)
     {
-        var nextRoundEnabled = Model.Round != null && Model.Round.RoundContenders.Count == 1 ? "disabled" : "";
-        <a asp-action="NextRound" asp-route-id="@Model.BracketID" class="btn btn-secondary @nextRoundEnabled">Start Next Round</a>
+        <a asp-action="NextRound" asp-route-id="@Model.BracketID" class="btn btn-secondary">Start Next Round</a>
+
+        if (Model.Round.RoundContenders.Count <= 1)
+        {
+            <a asp-action="FinishBracket" asp-route-id="@Model.BracketID" class="btn btn-secondary">Finish Bracket</a>
+        }
     }
     else
     {

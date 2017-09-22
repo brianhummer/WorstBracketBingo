@@ -115,9 +115,9 @@ namespace WorstBracketBingo.Data
 
             var boards = new BingoBoard[]
             {
-                new BingoBoard{ BracketID = 1, Title = "Brian's Top of the Trash Bin"},
-                new BingoBoard{ BracketID = 1, Title = "Tony's Trash Heap of Garbage"},
-                new BingoBoard{ BracketID = 1, Title = "Matt's One True Trash"},
+                new BingoBoard{ BracketID = 1, Title = "Brian's Top of the Trash Bin", RoundEliminated = -1 },
+                new BingoBoard{ BracketID = 1, Title = "Tony's Trash Heap of Garbage", RoundEliminated = -1 },
+                new BingoBoard{ BracketID = 1, Title = "Matt's One True Trash", RoundEliminated = -1 },
             };
 
             foreach (BingoBoard b in boards)

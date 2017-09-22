@@ -20,29 +20,17 @@
             </div>
         </div>
         <div class="form-group">
-            <label asp-for="Contenders" class="col-md-2 control-label"></label>
-            <div class="col-md-offset-2 col-md-10">
-                <table>
-                    <tr>
-                        @{
-                            int cnt = 0;
-                            List<WorstBracketBingo.Models.BracketBingoViewModels.AssignedEntrantData> entrants = ViewBag.Entrants;
-
-                            foreach (var entrant in entrants)
-                            {
-                                if (cnt++ % 3 == 0)
-                                {
-                                    @:</tr><tr>
-                                }
-                                @:<td>
-                                    <input type="checkbox" name="selectedEntrants" value="@entrant.EntrantID" @(Html.Raw(entrant.Assigned ? "checked=\"checked\"" : "")) />   
-                                    <img src="@Url.Content("~/images/uploads/" + @entrant.Thumbnail)" alt="" width="50"/>
-                                    @entrant.Name
-                                @:</td>
-                            }
-                            @:</tr>
-                        }
-                </table>
+            <label asp-for="VoteLink" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="VoteLink" class="form-control" />
+                <span asp-validation-for="VoteLink" class="text-danger"></span>
+            </div>
+        </div>
+        <div class="form-group">
+            <label asp-for="ResultsLink" class="col-md-2 control-label"></label>
+            <div class="col-md-10">
+                <input asp-for="ResultsLink" class="form-control" />
+                <span asp-validation-for="ResultsLink" class="text-danger"></span>
             </div>
         </div>
         <div class="form-group">

@@ -8,16 +8,20 @@
 <div class="row">
     <div class="col-md-12 mt-3">
         <h2>Current Brackets</h2>
-        <div class="list-group">
-        @foreach (var item in Model)
-        {
-            <div class="list-group-item list-group-item-action flex-column align-items-start">
-                <div class="d-flex w-100 justify-content-between">
-                    <a asp-controller="Brackets" asp-action="Details" asp-route-id="@item.BracketID"><h5 class="mb-1">@Html.DisplayFor(modelItem => item.Title)</h5></a>
-                    <a asp-controller="Brackets" asp-action="ViewBoards" asp-route-id="@item.BracketID"><small>View Boards</small></a>
-                </div>
-            </div>
-        }
-        </div>
+        <table class="table table-striped table-hover">
+            <tbody>
+                @foreach (var item in Model)
+                {
+                    <tr>
+                        <td>
+                            <a asp-controller="Brackets" asp-action="Results" asp-route-id="@item.BracketID"><h5 class="mb-1">@Html.DisplayFor(modelItem => item.Title)</h5></a>
+                        </td>
+                        <td>
+                            <a asp-controller="Brackets" asp-action="Manage" asp-route-id="@item.BracketID">Manage</a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
     </div>
 </div>

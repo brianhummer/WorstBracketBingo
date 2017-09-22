@@ -54,6 +54,7 @@ namespace WorstBracketBingo.Controllers
             var bingoBoard = new BingoBoard();
             bingoBoard.BracketID = id;
             bingoBoard.BoardPieces = new List<BoardPiece>();
+            bingoBoard.RoundEliminated = -1;
             PopulateAssignedPieceData(bingoBoard);
             return View(bingoBoard);
         }

@@ -35,13 +35,13 @@
         }
         <nav aria-label="Page navigation example">
             <ul class="pagination">
-                <li class="page-item @prevDisabled"><a class="page-link" asp-action="Details" asp-route-round="@(Model.Round.RoundNumber - 1)">Previous</a></li>
+                <li class="page-item @prevDisabled"><a class="page-link" asp-action="Manage" asp-route-round="@(Model.Round.RoundNumber - 1)">Previous</a></li>
                 @for (int i = 0; i < Model.NumRounds; i++)
                 {
                     var active = Model.Round.RoundNumber == i ? "active" : "";
-                    <li class="page-item @active"><a class="page-link" asp-action="details" asp-route-round="@i">@i</a></li>
+                    <li class="page-item @active"><a class="page-link" asp-action="Manage" asp-route-round="@i">@i</a></li>
                 }
-                <li class="page-item @nextDisabled"><a class="page-link" asp-action="Details" asp-route-round="@(Model.Round.RoundNumber + 1)">Next</a></li>
+                <li class="page-item @nextDisabled"><a class="page-link" asp-action="Manage" asp-route-round="@(Model.Round.RoundNumber + 1)">Next</a></li>
             </ul>
         </nav>
     </div>
@@ -128,7 +128,7 @@ else
     {
         if (Model.Round == null || Model.Round.RoundNumber == Model.NumRounds - 1)
         {
-            if (Model.Round.RoundContenders.Count > 0)
+            if (Model.Round == null || Model.Round.RoundContenders.Count > 0)
             {
                 <a asp-action="NextRound" asp-route-id="@Model.BracketID" class="btn btn-secondary">Start Next Round</a>
             }

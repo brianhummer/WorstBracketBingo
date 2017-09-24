@@ -151,7 +151,7 @@ namespace WorstBracketBingo.Controllers
         }
 
         // GET: Brackets/NextRound/5
-        public async Task<IActionResult> NextRound(int? id)
+        public async Task<IActionResult> NextRound(int? id, int round)
         {
             if (id == null)
             {
@@ -162,6 +162,11 @@ namespace WorstBracketBingo.Controllers
                 .Include(i => i.Contenders)
                 .Include(i => i.Rounds)
                 .SingleOrDefaultAsync(m => m.BracketID == id);
+
+            if(round != -1 && round != bracketToUpdate.Rounds.Max(b => b.RoundNumber))
+            {
+                return RedirectToAction("Results", new { id = id });
+            }
 
             if (await TryUpdateModelAsync<Bracket>(bracketToUpdate, "", i => i.Title))
             {
@@ -200,6 +205,11 @@ namespace WorstBracketBingo.Controllers
                 .Include(i => i.Contenders)
                 .Include(i => i.Rounds)
                 .SingleOrDefaultAsync(m => m.BracketID == id);
+
+            if (bracketToUpdate.Finished == true)
+            {
+                return RedirectToAction("Results", new { id = id });
+            }
 
             if (await TryUpdateModelAsync<Bracket>(bracketToUpdate, "", i => i.Title))
             {

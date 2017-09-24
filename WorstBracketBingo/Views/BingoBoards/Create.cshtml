@@ -1,4 +1,4 @@
-@model WorstBracketBingo.Models.BingoBoard
+@model WorstBracketBingo.Models.BingoBoardViewModels.BoardCreateViewModel
 
 @{
     ViewData["Title"] = "Create";
@@ -12,10 +12,10 @@
         <hr />
         <div asp-validation-summary="ModelOnly" class="text-danger"></div>
         <div class="form-group">
-            <label asp-for="BracketID" class="col-md-2 control-label"></label>
+            <input type="hidden" asp-for="BracketID" />
+            <label class="col-md-2 control-label">Bracket</label>
             <div class="col-md-10">
-                <input asp-for="BracketID" class="form-control" readonly value="@Model.BracketID"/>
-                <span asp-validation-for="BracketID" class="text-danger"></span>
+                <input class="form-control" readonly value="@ViewData["BracketTitle"]"/>
             </div>
         </div>
         <div class="form-group">
@@ -25,34 +25,26 @@
                 <span asp-validation-for="Title" class="text-danger"></span>
             </div>
         </div>
-        <div class="form-group">
-            <div class="col-md-offset-2 col-md-10">
-                <table>
-                    <tr>
-                        @{
-                            int cnt = 0;
-                            List<WorstBracketBingo.Models.BracketBingoViewModels.AssignedContenderData> contenders = ViewBag.Contenders;
 
-                            foreach (var contender in contenders)
-                            {
-                                if (cnt++ % 3 == 0)
-                                {
-                                    @:</tr><tr>
-                                }
-                                @:<td>
-                                    <input type="checkbox"
-                                        name="selectedContenders"
-                                        value="@contender.ContenderID"
-                                        @(Html.Raw(contender.Assigned ? "checked=\"checked\"" : "")) />
-                                        <img src="@Url.Content("~/images/uploads/" + @contender.Thumbnail)" alt="" width="50" />
-                                        @contender.Name
-                                    @:</td>
-                            }
-                            @:</tr>
-                        }
-                </table>
+        <label class="ml-3">Entrants</label>
+        @for (int i = 0; i < 25; i++)
+        {
+            <div class="form-group col-md-10">
+                @if (i == 0)
+                {
+                    <label>1 - Favorite</label>
+                }
+                else if (i == 1)
+                {
+                    <label>2-25 - Order doesn't matter</label>
+                }
+                <select asp-for="Entrants[i]" class="form-control" asp-items="ViewBag.Entrants">
+                    <option value="">-- Select Entrant --</option>
+                </select>
+                <span asp-validation-for="Entrants[i]" class="text-danger"></span>
             </div>
-        </div>
+
+        }
         <div class="form-group">
             <div class="col-md-offset-2 col-md-10">
                 <input type="submit" value="Create" class="btn btn-default" />

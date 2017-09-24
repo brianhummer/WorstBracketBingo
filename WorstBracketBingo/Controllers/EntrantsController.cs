@@ -71,7 +71,7 @@ namespace WorstBracketBingo.Controllers
                     {
 
                         var file = Image;
-                        var uploads = Path.Combine(_hostingEnvironment.WebRootPath, "images\\uploads");
+                        var uploads = Path.Combine(_hostingEnvironment.WebRootPath, "images/uploads");
                         
                         if (file.Length > 0)
                         {

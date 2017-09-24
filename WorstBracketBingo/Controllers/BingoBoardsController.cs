@@ -8,6 +8,7 @@ using Microsoft.EntityFrameworkCore;
 using WorstBracketBingo.Data;
 using WorstBracketBingo.Models;
 using WorstBracketBingo.Models.BracketBingoViewModels;
+using WorstBracketBingo.Models.BingoBoardViewModels;
 
 namespace WorstBracketBingo.Controllers
 {
@@ -51,12 +52,17 @@ namespace WorstBracketBingo.Controllers
         // GET: BingoBoards/Create
         public IActionResult Create(int id)
         {
-            var bingoBoard = new BingoBoard();
-            bingoBoard.BracketID = id;
-            bingoBoard.BoardPieces = new List<BoardPiece>();
-            bingoBoard.RoundEliminated = -1;
-            PopulateAssignedPieceData(bingoBoard);
-            return View(bingoBoard);
+            var bingoBoardViewModel = new BoardCreateViewModel();
+            bingoBoardViewModel.BracketID = id;
+            ViewData["BracketTitle"] = _context.Brackets.Single(b => b.BracketID == id).Title;
+
+            //bingoBoardViewModel.Entrants = new List<Entrant>(25);
+            //bingoBoard.BoardPieces = new List<BoardPiece>();
+            //bingoBoard.RoundEliminated = -1;
+
+            ViewBag.Entrants = new SelectList(_context.Entrants.OrderBy(e => e.Name).AsNoTracking(), "EntrantID", "Name");
+
+            return View(bingoBoardViewModel);
         }
 
         // POST: BingoBoards/Create
@@ -64,34 +70,76 @@ namespace WorstBracketBingo.Controllers
         // more details see http://go.microsoft.com/fwlink/?LinkId=317598.
         [HttpPost]
         [ValidateAntiForgeryToken]
-        public async Task<IActionResult> Create([Bind("BingoBoardID,BracketID,Title")] BingoBoard bingoBoard, string[] selectedContenders)
+        public async Task<IActionResult> Create(BoardCreateViewModel bingoBoardViewModel)
         {
             List<int> positions = new List<int>();
             for (int i = 0; i < REQUIRED_PIECES; i++)
                 positions.Add(i);
 
+            // TODO: validate distinct
+            //var distinctEntrants = bingoBoard.Entrants.Select(e => e.EntrantID).Distinct().ToList();
+            
             var rand = new Random(DateTime.Now.Millisecond);
+            var bracket = _context.Brackets
+                .Include(b => b.Contenders)
+                .Include(b => b.Rounds)
+                .Single(b => b.BracketID == bingoBoardViewModel.BracketID);
 
-            if (selectedContenders != null)
+            var bracketEntrants = bracket.Contenders.Select(b => b.EntrantID).ToList();
+            var contenders = new List<Contender>();
+            var roundId = bracket.Rounds != null && bracket.Rounds.Count == 1 ? bracket.Rounds.First().RoundID : -1;
+            for (int i = 0; i < bingoBoardViewModel.Entrants.Count; i++)
             {
-                bingoBoard.BoardPieces = new List<BoardPiece>();
-                foreach (var contender in selectedContenders)
+                Contender contender;
+                if(!bracketEntrants.Contains(bingoBoardViewModel.Entrants[i]))
                 {
-                    var pos = rand.Next(0, positions.Count);
-                    var boardPieceToAdd = new BoardPiece { BingoBoardID = bingoBoard.BingoBoardID, ContenderID = int.Parse(contender), BoardPosition = positions[pos]};
-                    positions.Remove(positions[pos]);
+                    contender = new Contender
+                    {
+                        BracketID = bracket.BracketID,
+                        EntrantID = bingoBoardViewModel.Entrants[i],
+                    };
 
-                    bingoBoard.BoardPieces.Add(boardPieceToAdd);
+                     _context.Add(contender);
+
+                    if(roundId != -1)
+                    {
+                        _context.Add(new RoundContender { RoundID = roundId, ContenderID = contender.ContenderID });
+                    }
                 }
+                else
+                {
+                    contender = bracket.Contenders.Single(c => c.EntrantID == bingoBoardViewModel.Entrants[i]);
+                }
+
+                contenders.Add(contender);
+            }
+
+            //await _context.SaveChangesAsync();
+
+            var bingoBoard = new BingoBoard
+            {
+                BracketID = bracket.BracketID,
+                Title = bingoBoardViewModel.Title,
+                RoundEliminated = -1
+            };
+
+            bingoBoard.BoardPieces = new List<BoardPiece>();
+            for (int i = 0; i < contenders.Count; i++)
+            {
+                var pos = i == 0 ? positions.Count / 2 : rand.Next(0, positions.Count);
+                var boardPieceToAdd = new BoardPiece { BingoBoardID = bingoBoard.BingoBoardID, ContenderID = contenders[i].ContenderID, BoardPosition = positions[pos]};
+                positions.Remove(positions[pos]);
+
+                bingoBoard.BoardPieces.Add(boardPieceToAdd);
             }
 
             if (ModelState.IsValid)
             {
                 _context.Add(bingoBoard);
                 await _context.SaveChangesAsync();
-                return RedirectToAction("Details", "Brackets", new { id = bingoBoard.BracketID });
+                return RedirectToAction("Manage", "Brackets", new { id = bingoBoard.BracketID });
             }
-            PopulateAssignedPieceData(bingoBoard);
+
             return View(bingoBoard);
         }
 

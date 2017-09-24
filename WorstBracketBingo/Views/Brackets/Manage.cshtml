@@ -130,7 +130,8 @@ else
         {
             if (Model.Round == null || Model.Round.RoundContenders.Count > 0)
             {
-                <a asp-action="NextRound" asp-route-id="@Model.BracketID" class="btn btn-secondary">Start Next Round</a>
+                var round = Model.Round == null ? -1 : Model.Round.RoundNumber;
+                <a asp-action="NextRound" asp-route-id="@Model.BracketID" asp-route-round="@round" class="btn btn-secondary">Start Next Round</a>
             }
 
             if (Model.Round != null && Model.Round.RoundContenders.Count <= 1)
